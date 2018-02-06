@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Nov  1 14:45:23 2017
+
+@author: zhenliu
+"""
+
+import numpy as np
+from matplotlib import pyplot as plot
+from scipy.io import loadmat
+
+
+def sigmoid(x):
+    return 1.0 / (1.0 + np.exp(-x))
+def display_data(X):
+    """
+    Transforms each input row into a rectangular image part and plots
+    the resulting image.
+    """
+    m, n = X.shape
+    example_width = int(np.around(np.sqrt(n)))
+    example_height = int(n / example_width)
+    display_rows = int(np.sqrt(m))
+    display_cols = int(m / display_rows)
+    display_array = np.ones((
+        display_rows * example_height, display_cols * example_width
+    ))
+    for i in range(display_rows):
+        for j in range(display_cols):
+            idx = i * display_cols + j
+            image_part = X[idx, :].reshape((example_height, example_width))
+            display_array[
+                (j * example_height):((j + 1) * example_height),
+                (i * example_width):((i + 1) * example_width)
+            ] = image_part
+    plot.imshow(display_array.T, cm.Greys)
+    plot.show()
+def predict(Theta1, Theta2, X):
+    m = X.shape[0]
+    A2 = sigmoid(X.dot(Theta1.T))
+    A2 = np.concatenate((np.ones((m, 1)), A2), axis=1)
+    A3 = sigmoid(A2.dot(Theta2.T))
+    predictions = 1 + np.argmax(A3, axis=1)
+    return predictions
+
+
+if __name__ == '__main__':
+    print('Loading and Visualizing Data ...')
+    data = loadmat('ex3data1.mat')
+    X = data['X']
+    y = data['y'].flatten()
+    m = X.shape[0]
+    sel = np.random.permutation(X)[:100]
+    display_data(sel)
+    print('Loading Saved Neural Network Parameters ...')
+    weights = loadmat('ex3weights.mat')
+    Theta1 = weights['Theta1']
+    Theta2 = weights['Theta2']
+    X = np.concatenate((np.ones((m, 1)), X), axis=1)
+    predictions = predict(Theta1, Theta2, X)
+    accuracy = 100 * np.mean(predictions == y)
+    print('Training set accuracy: %0.2f %%' % accuracy)
+    random_X = np.random.permutation(X)
+#    for i in range(m):
+#        example = random_X[i].reshape(1, -1)
+#        prediction = predict(Theta1, Theta2, example)
+#        print('Prediction: %d (digit %d)' % (prediction, prediction % 10))
+#        display_data(example[:, 1:])
